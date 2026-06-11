@@ -6,3 +6,4 @@ data/*.bin
 data/meta.json
 data/cache/
 data/blend/
+data/modern/
