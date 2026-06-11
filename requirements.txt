@@ -1,3 +1,4 @@
 torch>=2.2
 numpy>=1.26
 datasets>=3.0
+zstandard>=0.22  # needed to stream zstd-compressed Hub datasets (e.g. the DailyDialog mirror)

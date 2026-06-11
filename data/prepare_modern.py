@@ -4,7 +4,7 @@
   30%  TinyStories        (roneneldan/TinyStories)        grammar + narrative coherence
   20%  Simple Wikipedia   (wikimedia/wikipedia, simple)   modern declarative prose
   20%  FineWeb-Edu        (HuggingFaceFW/fineweb-edu)     general modern web English
-  15%  DailyDialog        (li2017dailydialog/daily_dialog) everyday conversation
+  15%  DailyDialog        (agentlans/li2017dailydialog)   everyday conversation
   15%  Hacker News        (Algolia API)                   internet discussion voice
 
 Hugging Face sources are streamed, so only the slice we need is downloaded.
@@ -53,10 +53,13 @@ def take_streamed(dataset, budget: int, get_text) -> list[str]:
 
 def dailydialog_text(row) -> str:
     """Join a dialogue's turns into lines, fixing DailyDialog's spaced
-    punctuation ('I ’ m fine .' -> 'I'm fine.')."""
+    punctuation ('I ’ m fine .' -> 'I'm fine.'). Uses the agentlans parquet
+    mirror's chat schema: a `conversations` list of {from, value} messages."""
     turns = []
-    for turn in row["dialog"]:
-        turn = turn.replace(" ’ ", "'").replace("’", "'")
+    for msg in row["conversations"]:
+        if msg["from"] == "system":
+            continue
+        turn = msg["value"].replace(" ’ ", "'").replace("’", "'")
         turn = re.sub(r"\s+([.,!?;:%)])", r"\1", turn)
         turn = re.sub(r"([($])\s+", r"\1", turn)
         turns.append(turn.strip())
@@ -85,7 +88,9 @@ def main():
     docs["fineweb_edu"] = take_streamed(ds, budgets["fineweb_edu"], lambda r: r["text"])
 
     print(f"DailyDialog ({budgets['dailydialog'] / 1e6:.0f}MB)...")
-    ds = load_dataset("li2017dailydialog/daily_dialog", split="train", streaming=True)
+    # the official li2017dailydialog repo is script-based, unsupported by datasets>=3;
+    # this mirror is parquet
+    ds = load_dataset("agentlans/li2017dailydialog", split="train", streaming=True)
     docs["dailydialog"] = take_streamed(ds, budgets["dailydialog"], dailydialog_text)
 
     print(f"Hacker News ({budgets['hackernews'] / 1e6:.0f}MB)...")
