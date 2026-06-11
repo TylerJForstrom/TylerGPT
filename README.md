@@ -39,6 +39,17 @@ Runtime → Change runtime type → T4 GPU, then:
 That's a ~10M parameter model (nanoGPT's shakespeare-char config); it reaches
 val loss ~1.47 and writes much more convincing verse.
 
+For the modern-English blend (TinyStories + Simple Wikipedia + FineWeb-Edu +
+DailyDialog + Hacker News — see `data/prepare_modern.py`), swap the data steps:
+
+```
+!python data/prepare_modern.py --total-bytes 40000000
+!python train.py --data-dir data/modern --out-dir out-modern \
+                 --n-layer 6 --n-head 6 --n-embd 384 --block-size 256 \
+                 --batch-size 64 --max-iters 8000 --dropout 0.1 --lr 6e-4
+!python sample.py --ckpt out-modern/ckpt.pt --prompt "Once upon a time" --temperature 0.7
+```
+
 ## Repo layout
 
 | File | What it is |
@@ -47,6 +58,8 @@ val loss ~1.47 and writes much more convincing verse.
 | `train.py` | Training loop: batching, AdamW, LR schedule, eval, checkpoints |
 | `sample.py` | Load a checkpoint and generate text |
 | `data/prepare_shakespeare.py` | Download corpus, build char vocab, write train/val bins |
+| `data/prepare_blend.py` | Public-domain novels + Hacker News comments blend |
+| `data/prepare_modern.py` | Curated modern-English blend, streamed from Hugging Face |
 
 ## Roadmap
 
